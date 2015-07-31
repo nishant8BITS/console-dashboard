@@ -3,11 +3,9 @@ var checkOutFirebaseReference = new Firebase('https://mcd-checkin-dev.firebaseio
 
 //Get all the users and put them in array
 var usersRef = checkOutFirebaseReference.child("users");
-var userDict = {};
 
 //Get all the orders and put them in an array
 var orderRef = checkOutFirebaseReference.child("order");
-var orderDict = {};
 
 /**
  * populate the users dropdown from FB
@@ -41,8 +39,6 @@ var iphoneImg = ["/img/assets/1.png", "/img/assets/2.png", "/img/assets/3.png",
 // Status ticker states
 var statusTick = ["Waiting", "Assembled", "Delivered"];
 
-var listeningUserChanges = false;
-
 $("#load-usr").on('click', function() {
   google.maps.event.addDomListener(window, 'load', checkMap);
   $('#selected-usr-panel').removeClass("hidden");
@@ -54,15 +50,15 @@ $("#load-usr").on('click', function() {
 
   usersRef.child(usrSelVal).once('value', function(data) {
       loadCurrentUser(data.val());
-
-      if(!listeningUserChanges){
-        usersRef.child(usrSelVal).on("value", function(snapshot) {
-          loadCurrentUser(snapshot.val())
-        });
-        listeningUserChanges = true;
-      }
-      
-  })
+      //
+      //
+      //if(!listeningUserChanges){
+      //  usersRef.child(usrSelVal).on("value", function(snapshot) {
+      //    loadCurrentUser(snapshot.val())
+      //  });
+      //  listeningUserChanges = true;
+      //}
+  });
 
   
 
@@ -102,7 +98,7 @@ function loadCurrentUser(currentUser) {
     var currentViewReturn = currentUser.currentView;
     var tableServiceEnabledReturn = currentUser.tableServiceEnabled;
     var wifiOverideReturn = currentUser.wifiOverride;
-    var displayNameReturn = currentUser.displayName;
+    var displayNameReturn = currentUser.user.displayName;
     var geoFenceEventMethodReturn = currentUser.geoFenceEventMethod;
     var currentLocation = currentUser.currentLocation || {};
     var currentLocationLatReturn = currentLocation.latitude;
