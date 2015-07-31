@@ -87,7 +87,6 @@ function loadUsersFromFB() {
 
 function loadCurrentUser(currentUser) {
   usersRef.on("value", function(snapshot) {
-    
     var beaconsEnabledReturn = currentUser.beaconsEnabled;
     var currentViewReturn = currentUser.currentView;
     var tableServiceEnabledReturn = currentUser.tableServiceEnabled;
@@ -307,7 +306,7 @@ function checkBle(beaconsEnabledReturn) {
 
 function checkView(currentViewReturn) {
 
-  switch (currentViewReturn) {
+  switch (parseInt(currentViewReturn)) {
     case 0:
       $('#iphone-scrn').css("background-image", "url(" + iphoneImg[0] + ")");
       $('#led').css("background-color", "#ff5021");
@@ -347,6 +346,7 @@ function checkView(currentViewReturn) {
       $('#iphone-scrn').css("background-image", "url(" + iphoneImg[7] + ")");
       $('#led').css("background-color", "#ff5021");
       $('#status-tick').html(statusTick[0]);
+      getMostRecentOrder();
       break;
     case 8:
       $('#iphone-scrn').css("background-image", "url(" + iphoneImg[8] + ")");
@@ -461,6 +461,10 @@ function checkView(currentViewReturn) {
     default:
       $("#iphone-scrn").val(currentViewVal);
   }
+}
+
+function getMostRecentOrder() {
+  // orderRef
 }
 
 function checkOrderStatusReturn(orderStatusReturn) {

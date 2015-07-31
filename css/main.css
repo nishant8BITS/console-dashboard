@@ -129,7 +129,7 @@ body {
   position: absolute;
   top: 0;
   left: 50%;
-  background-image: url("/img/assets/00@2x.png");
+  /*background-image: url("/img/assets/00@2x.png");*/
   background-size: 100% 100%;
   background-position: top center;
   background-repeat: no-repeat;
