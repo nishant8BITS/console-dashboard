@@ -51,7 +51,10 @@ $("#load-usr").on('click', function() {
   var usrSelVal = $('#userDropdown').val();
   var schemaSelVal = $('#schemaDropdown').val();
 
-  loadCurrentUser();
+  usersRef.child(usrSelVal).once('value', function(data) {
+      loadCurrentUser(data.val());
+  })
+
   switch (schemaSelVal) {
     case "schema-a":
       document.getElementById("bleDropdown").disabled = true;
@@ -84,23 +87,16 @@ function loadUsersFromFB() {
 
 function loadCurrentUser(currentUser) {
   usersRef.on("value", function(snapshot) {
-    var userDict = snapshot.val();
-
-    for (var key in userDict) {
-      if (userDict.hasOwnProperty(key)) {
-        var currentUser = userDict[key];
-        $('#userDropdown').append('<option value="' + key + '">' + currentUser.user.name + '</option>');
-      }
-    }
-
+    
     var beaconsEnabledReturn = currentUser.beaconsEnabled;
     var currentViewReturn = currentUser.currentView;
     var tableServiceEnabledReturn = currentUser.tableServiceEnabled;
     var wifiOverideReturn = currentUser.wifiOverride;
     var displayNameReturn = currentUser.user.displayName;
     var geoFenceEventMethodReturn = currentUser.geoFenceEventMethod;
-    var currentLocationLatReturn = currentUser.currentLocation.latitude;
-    var currentLocationLongReturn = currentUser.currentLocation.longitude;
+    var currentLocation = currentUser.currentLocation || {};
+    var currentLocationLatReturn = currentLocation.latitude;
+    var currentLocationLongReturn = currentLocation.longitude;
 
 
     console.log("HIT " + displayNameReturn);
