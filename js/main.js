@@ -41,6 +41,7 @@ var iphoneImg = ["/img/assets/1.png", "/img/assets/2.png", "/img/assets/3.png",
 // Status ticker states
 var statusTick = ["Waiting", "Assembled", "Delivered"];
 
+var listeningUserChanges = false;
 
 $("#load-usr").on('click', function() {
   google.maps.event.addDomListener(window, 'load', checkMap);
@@ -53,7 +54,17 @@ $("#load-usr").on('click', function() {
 
   usersRef.child(usrSelVal).once('value', function(data) {
       loadCurrentUser(data.val());
+
+      if(!listeningUserChanges){
+        usersRef.child(usrSelVal).on("value", function(snapshot) {
+          loadCurrentUser(snapshot.val())
+        });
+        listeningUserChanges = true;
+      }
+      
   })
+
+  
 
   switch (schemaSelVal) {
     case "schema-a":
@@ -69,9 +80,9 @@ $("#load-usr").on('click', function() {
   }
 });
 
-
 function loadUsersFromFB() {
   usersRef.on("value", function(snapshot) {
+    // populate select once needs a private var
     var userDict = snapshot.val();
 
     for (var key in userDict) {
@@ -86,12 +97,12 @@ function loadUsersFromFB() {
 
 
 function loadCurrentUser(currentUser) {
-  usersRef.on("value", function(snapshot) {
+    console.log('changed value of user', currentUser)
     var beaconsEnabledReturn = currentUser.beaconsEnabled;
     var currentViewReturn = currentUser.currentView;
     var tableServiceEnabledReturn = currentUser.tableServiceEnabled;
     var wifiOverideReturn = currentUser.wifiOverride;
-    var displayNameReturn = currentUser.user.displayName;
+    var displayNameReturn = currentUser.displayName;
     var geoFenceEventMethodReturn = currentUser.geoFenceEventMethod;
     var currentLocation = currentUser.currentLocation || {};
     var currentLocationLatReturn = currentLocation.latitude;
@@ -102,47 +113,50 @@ function loadCurrentUser(currentUser) {
     console.log(currentLocationLatReturn);
     console.log(currentLocationLongReturn);
 
-    checkView(currentViewReturn);
+    checkView(currentViewReturn, displayNameReturn, currentUser);
     checkTable(tableServiceEnabledReturn);
     checkWifi(wifiOverideReturn);
     checkDisplayName(displayNameReturn);
     checkGeofenceEvent(geoFenceEventMethodReturn);
-    loadOrders(displayNameReturn, currentUser);
+    
+    if(parseInt(currentViewReturn) == 8) loadOrders(displayNameReturn, currentUser);
 
-  });
 }
 
 function loadOrders(displayNameReturn, currentUser) {
-  orderRef.limitToLast(5).on("child_added", function(snapshot) {
+  orderRef.limitToLast(1).once("value", function(snapshot) {
     var orderDict = snapshot.val();
-    var usersOrder = orderDict[Object.keys(orderDict)[10]];
-    var timeOfOrder = orderDict[Object.keys(orderDict)[5]];
+    order = orderDict[Object.keys(orderDict)[0]];
+    // var usersOrder = orderDict[Object.keys(orderDict)[10]];
+    // var timeOfOrder = orderDict[Object.keys(orderDict)[5]];
 
-    if (usersOrder === displayNameReturn) {
+    // if (usersOrder === displayNameReturn) {
       console.log("////////////////////////////////////////////////////////////////////////////////////HIT");
-      console.log(snapshot.key());
-      console.log(snapshot.val());
+      // console.log(snapshot.key());
+      // console.log(snapshot.val());
 
-      var currentUsersOrder = snapshot.val();
-      var orderStatusReturn = currentUsersOrder.status.orderStatusReturn;
-      var fineBoundaryReturn = currentUsersOrder.status.fineBoundary;
-      var orderNumberReturn = currentUsersOrder.orderNumber;
-      var orderCodeReturn = currentUsersOrder.orderCode;
-      var latitudeReturn = currentUsersOrder.status.currentLocation.latitude;
-      var longitudeReturn = currentUsersOrder.status.currentLocation.longitude;
+      // var currentUsersOrder = snapshot.val();
+      var orderStatusReturn = order.status.orderStatusReturn;
+      var fineBoundaryReturn = order.status.fineBoundary;
+      var orderNumberReturn = order.orderNumber;
+      var orderCodeReturn = order.orderCode;
+      var eta = order.status.eta;
+      var created = order.orderCreationTime;
+      // var latitudeReturn = order.status.currentLocation.latitude;
+      // var longitudeReturn = order.status.currentLocation.longitude;
 
-      console.log("////////////// LONGITUDE  " + longitudeReturn);
-      console.log("////////////// LATITUDE  " + latitudeReturn);
+      // console.log("////////////// LONGITUDE  " + longitudeReturn);
+      // console.log("////////////// LATITUDE  " + latitudeReturn);
       console.log("////////////// ORDER NUMBER  " + orderNumberReturn);
       console.log("////////////// ORDER STATUS  " + orderStatusReturn);
       console.log("////////////// FINE BOUNDARY  " + fineBoundaryReturn);
 
       console.log("//////////////ORDERDICT " + orderDict);
-      console.log("//////////////CURRENTORDER " + usersOrder);
-      console.log("//////////////CURRENTORDER " + timeOfOrder);
+      console.log("//////////////CURRENTORDER ", order);
+      console.log("//////////////CURRENTORDER ETA " + eta);
+      console.log("//////////////CURRENTORDER CREATED " + created);
 
-
-    }
+    // }
 
   });
 }
@@ -198,25 +212,25 @@ function loadOrders(displayNameReturn, currentUser) {
 //   changeListener();
 // });
 //
-// function changeListener(usrSelVal) {
-//   var displayNameVal = $('#displayNameInput').val();
-//   var tableServiceVal = $('#tableServiceDropdown').find(':selected').val();
-//   var fineBoundaryVal = $('#boundaryDropdown').find(':selected').val();
-//   var wifiVal = $('#wifiDropdown').find(':selected').val();
-//   var bleVal = $('#bleDropdown').find(':selected').val();
-//   var currentViewVal = $('#iphone-scrn').find(':selected').val();
-//   var foodOrderVal = $('#orderDropdown').find(':selected').val();
-//   var driveThruVal = $('#driveThruDropdown').find(':selected').val();
-//   var locationServicesVal = $('#locationServicesDropdown').find(':selected').val();
-//   var pickUpTableVal = $('#pickUpTableDropdown').find(':selected').val();
-//
-//   usersRef.update({
-//     "user": {
-//       "displayName": displayNameVal
-//     }
-//   });
-//
-// }
+$('input').change(function(e){
+  var userId = $('#userDropdown').val();
+  var displayNameVal = $('#displayNameInput').val();
+  var tableServiceVal = $('#tableServiceDropdown').val();
+  var fineBoundaryVal = $('#boundaryDropdown').val();
+  var wifiVal = $('#wifiDropdown').val();
+  var bleVal = $('#bleDropdown').val();
+  var currentViewVal = $('#iphone-scrn').val();
+  var foodOrderVal = $('#orderDropdown').val();
+  var driveThruVal = $('#driveThruDropdown').val();
+  var locationServicesVal = $('#locationServicesDropdown').val();
+  var pickUpTableVal = $('#pickUpTableDropdown').val();
+
+
+  usersRef.child(userId).update({
+      "displayName": displayNameVal
+  });
+
+})
 
 function checkMap(longitudeReturn, latitudeReturn) {
   var myLatlng = new google.maps.LatLng(longitudeReturn, latitudeReturn);
@@ -304,7 +318,7 @@ function checkBle(beaconsEnabledReturn) {
   }
 }
 
-function checkView(currentViewReturn) {
+function checkView(currentViewReturn, displayNameReturn, currentUser) {
 
   switch (parseInt(currentViewReturn)) {
     case 0:
@@ -346,7 +360,7 @@ function checkView(currentViewReturn) {
       $('#iphone-scrn').css("background-image", "url(" + iphoneImg[7] + ")");
       $('#led').css("background-color", "#ff5021");
       $('#status-tick').html(statusTick[0]);
-      getMostRecentOrder();
+      loadOrders(displayNameReturn, currentUser);
       break;
     case 8:
       $('#iphone-scrn').css("background-image", "url(" + iphoneImg[8] + ")");
@@ -461,10 +475,6 @@ function checkView(currentViewReturn) {
     default:
       $("#iphone-scrn").val(currentViewVal);
   }
-}
-
-function getMostRecentOrder() {
-  // orderRef
 }
 
 function checkOrderStatusReturn(orderStatusReturn) {
