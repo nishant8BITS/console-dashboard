@@ -9,6 +9,10 @@ var userDict = {};
 var orderRef = checkOutFirebaseReference.child("order");
 var orderDict = {};
 
+/**
+ * populate the users dropdown from FB
+ */
+loadUsersFromFB();
 
 // SET VALUES TO GUI
 var displayNameVal = $('#displayNameInput').val();
@@ -20,8 +24,6 @@ var currentViewVal = $('#iphone-scrn').find(':selected').val();
 var foodOrderVal = $('#orderDropdown').find(':selected').val();
 var nameVal = "User";
 var emailVal = "user@email.com";
-var latVal = $('.animated-circle').val();
-var longVal = $('.animated-circle').val();
 var beaconsEnabled = true;
 var driveThruVal = $('#driveThruDropdown').find(':selected').val();
 var locationServicesVal = $('#locationServicesDropdown').find(':selected').val();
@@ -33,8 +35,7 @@ var iphoneImg = ["/img/assets/1.png", "/img/assets/2.png", "/img/assets/3.png",
   "/img/assets/9.png", "/img/assets/10.png", "/img/assets/11.png", "/img/assets/12.png", "/img/assets/13.png",
   "/img/assets/14.png", "/img/assets/15.png", "/img/assets/16.png", "/img/assets/17.png", "/img/assets/18.png",
   "/img/assets/19.png", "/img/assets/20.png", "/img/assets/21.png", "/img/assets/22.png", "/img/assets/23.png",
-  "/img/assets/24.png", "/img/assets/25.png", "/img/assets/26.png", "/img/assets/27.png", "/img/assets/28.png"
-  ,"/img/assets/29.png","/img/assets/30.png"
+  "/img/assets/24.png", "/img/assets/25.png", "/img/assets/26.png", "/img/assets/27.png", "/img/assets/28.png", "/img/assets/29.png", "/img/assets/30.png"
 ];
 
 // Status ticker states
@@ -50,19 +51,7 @@ $("#load-usr").on('click', function() {
   var usrSelVal = $('#userDropdown').val();
   var schemaSelVal = $('#schemaDropdown').val();
 
-
-//Determine your user
-  if (usrSelVal === "user-1") {
-    console.log('//////////////////////// 1');
-    loadCurrentUser();
-
-  } else if (usrSelVal === "user-2") {
-      console.log('//////////////////////// 2');
-    loadCurrentUser();
-  }
-
-
-
+  loadCurrentUser();
   switch (schemaSelVal) {
     case "schema-a":
       document.getElementById("bleDropdown").disabled = true;
@@ -78,13 +67,31 @@ $("#load-usr").on('click', function() {
 });
 
 
+function loadUsersFromFB() {
+  usersRef.on("value", function(snapshot) {
+    var userDict = snapshot.val();
 
-// Load user 1
+    for (var key in userDict) {
+
+      if (userDict.hasOwnProperty(key)) {
+        var currentUser = userDict[key];
+        $('#userDropdown').append('<option value="' + key + '">' + currentUser.user.name + '</option>');
+      }
+    }
+  })
+};
+
+
 function loadCurrentUser(currentUser) {
   usersRef.on("value", function(snapshot) {
     var userDict = snapshot.val();
-    var currentUser = userDict[Object.keys(userDict)[0]];
 
+    for (var key in userDict) {
+      if (userDict.hasOwnProperty(key)) {
+        var currentUser = userDict[key];
+        $('#userDropdown').append('<option value="' + key + '">' + currentUser.user.name + '</option>');
+      }
+    }
 
     var beaconsEnabledReturn = currentUser.beaconsEnabled;
     var currentViewReturn = currentUser.currentView;
@@ -92,8 +99,13 @@ function loadCurrentUser(currentUser) {
     var wifiOverideReturn = currentUser.wifiOverride;
     var displayNameReturn = currentUser.user.displayName;
     var geoFenceEventMethodReturn = currentUser.geoFenceEventMethod;
+    var currentLocationLatReturn = currentUser.currentLocation.latitude;
+    var currentLocationLongReturn = currentUser.currentLocation.longitude;
 
-    console.log(currentViewReturn);
+
+    console.log("HIT " + displayNameReturn);
+    console.log(currentLocationLatReturn);
+    console.log(currentLocationLongReturn);
 
     checkView(currentViewReturn);
     checkTable(tableServiceEnabledReturn);
@@ -116,19 +128,19 @@ function loadOrders(displayNameReturn, currentUser) {
       console.log(snapshot.key());
       console.log(snapshot.val());
 
-        var currentUsersOrder = snapshot.val();
-        var orderStatusReturn = currentUsersOrder.status.orderStatusReturn;
-        var fineBoundaryReturn = currentUsersOrder.status.fineBoundary;
-        var orderNumberReturn = currentUsersOrder.orderNumber;
-        var orderCodeReturn = currentUsersOrder.orderCode;
-        var latitudeReturn = currentUsersOrder.status.currentLocation.latitude;
-        var longitudeReturn = currentUsersOrder.status.currentLocation.longitude;
+      var currentUsersOrder = snapshot.val();
+      var orderStatusReturn = currentUsersOrder.status.orderStatusReturn;
+      var fineBoundaryReturn = currentUsersOrder.status.fineBoundary;
+      var orderNumberReturn = currentUsersOrder.orderNumber;
+      var orderCodeReturn = currentUsersOrder.orderCode;
+      var latitudeReturn = currentUsersOrder.status.currentLocation.latitude;
+      var longitudeReturn = currentUsersOrder.status.currentLocation.longitude;
 
-          console.log("////////////// LONGITUDE  " + longitudeReturn);
-          console.log("////////////// LATITUDE  " + latitudeReturn);
-          console.log("////////////// ORDER NUMBER  " + orderNumberReturn);
-          console.log("////////////// ORDER STATUS  " + orderStatusReturn);
-          console.log("////////////// FINE BOUNDARY  " + fineBoundaryReturn);
+      console.log("////////////// LONGITUDE  " + longitudeReturn);
+      console.log("////////////// LATITUDE  " + latitudeReturn);
+      console.log("////////////// ORDER NUMBER  " + orderNumberReturn);
+      console.log("////////////// ORDER STATUS  " + orderStatusReturn);
+      console.log("////////////// FINE BOUNDARY  " + fineBoundaryReturn);
 
       console.log("//////////////ORDERDICT " + orderDict);
       console.log("//////////////CURRENTORDER " + usersOrder);
@@ -185,12 +197,6 @@ function loadOrders(displayNameReturn, currentUser) {
 //   checkMap(latitudeReturn, longitudeReturn);
 //
 // })
-
-
-
-
-
-
 
 
 // $(".form-trackr").change(function() {
@@ -511,12 +517,4 @@ function pickUpTable(pickUpTableReturn) {
     default:
       $("#pickUpTableDropdown").val(pickUpTableVal);
   }
-}
-
-function beaconPos(latReturn, longReturn) {
-  console.log("//// BEACON POS");
-  console.log("lat is:" + latReturn);
-  console.log("long is:" + longReturn);
-
-  $('.animated-circle').css("top", latReturn, "left", longReturn);
 }
