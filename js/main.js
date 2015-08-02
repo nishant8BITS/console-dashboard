@@ -1,6 +1,6 @@
 $( document ).ready(function() {
   //Create a reference to firebase
-  var checkOutFirebaseReference = new Firebase('https://mcd-checkin-dev.firebaseio.com/');
+  var checkOutFirebaseReference = new Firebase('https://mcd-checkin-teser.firebaseio.com/');
 
   //Get all the users and put them in array
   var usersRef = checkOutFirebaseReference.child("users"),
@@ -251,10 +251,9 @@ $( document ).ready(function() {
         locationServicesVal = $('#locationServicesDropdown').val(),
         pickUpTableVal = $('#pickUpTableDropdown').val();
 
-        usersRef.child(userId).update({
-          user: {
-              displayName: displayNameVal
-           }
+
+        usersRef.child(userId).child('user').update({
+              "displayName" : displayNameVal
         });
   })
 
