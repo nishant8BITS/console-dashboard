@@ -24,7 +24,7 @@
 <body>
 
 
-  <nav class="navbar bord_bot header-color" role="navigation">
+  <nav class="navbar bord_bot header-color nav-style" role="navigation">
     <div class="container-fluid">
       <div class="navbar-header">
         <div id="ttl" class="pull-left">
@@ -47,13 +47,16 @@
                 </select>
               </div>
               <div class="btn-group dropdown col-sm-4 col-md-4">
-                <select id="schemaDropdown" class="form-control">
+                <select id="schemaDropdown" class="form-control">                  
+                  <option value="">Select Schema</option>
+
                   <option value="schema-a">Schema A</option>
                   <option value="schema-b">Schema B</option>
                 </select>
               </div>
               <div class="btn-group dropdown col-sm-4 col-md-4">
                 <select id="scenarioDropdown" class="form-control">
+                  <option value="">Select Scenario</option>
                   <option value="scenario-a">Scenario A</option>
                   <option value="scenario-b">Scenario B</option>
                 </select>
@@ -66,9 +69,8 @@
           <div class="row">
             <div class="col-sm-12 col-md-12">
               <div class="" id="dev-sub-name">
-                <p class="device-nickname">[Device Nickname]</p>
                 <div class="input-group">
-                  <span class="input-group-addon" id="basic-addon1">Display Name</span>
+                  <span class="input-group-addon dropdown-width-fix" id="basic-addon">Display Name</span>
                   <input id="displayNameInput" type="text" class="checkMap form-control form-trackr" placeholder="Username" aria-describedby="basic-addon1">
                 </div>
               </div>
@@ -84,15 +86,6 @@
                       <option value="ios">iOS</option>
                       <option value="proximity-kit">Proximity Kit</option>
                       <option value="off">OFF</option>
-                    </select>
-                  </div>
-                </div>
-                <div class="input-group">
-                  <label class="dropdown-width-fix input-group-addon">Fine Boundary</label>
-                  <div class="btn-group dropdown">
-                    <select id="boundaryDropdown" class="form-control form-trackr">
-                      <option value="true">true</option>
-                      <option value="false">false</option>
                     </select>
                   </div>
                 </div>
@@ -142,6 +135,15 @@
                   </div>
                 </div>
                 <div class="input-group">
+                  <label class="dropdown-width-fix input-group-addon">Fine Boundary</label>
+                  <div class="btn-group dropdown">
+                    <select id="boundaryDropdown" class="form-control form-trackr">
+                      <option value="true">true</option>
+                      <option value="false">false</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="input-group">
                   <label class="dropdown-width-fix input-group-addon">Location Services</label>
                   <div class="btn-group dropdown">
                     <select id="locationServicesDropdown" class="form-control form-trackr">
@@ -167,19 +169,26 @@
       <div id="rgt-col" class="brdr-lgt col-md-4 col-sm-12 col-xs-12 hidden">
         <div class="row">
           <div id="iphone-console">
-            <div class="col-xs-6 col-sm-6 col-md-6">
+            <div class="col-xs-4 col-sm-4 col-md-4">
               <div class="center-block" id="pos-crtl">
                 <p class="pull-left">POS</p>
-                <div class="pull-right" id="led"></div>
+                <div class="pull-left" id="led"></div>
               </div>
             </div>
-            <div class="col-xs-6 col-sm-6 col-md-6">
+            <div class="col-xs-4 col-sm-4 col-md-4">
               <div class="center-block" id="ordr-status">
-                <p class="inline text-left">Order status:
+                <p class="inline text-left">Order Status:
                   <span id="status-tick" class="status-ticker">Pending</span>
                 </p>
               </div>
             </div>
+            <div class="col-xs-4 col-sm-4 col-md-4">
+              <div class="center-block" id="ordr-code">
+                <p class="inline text-left">Order Code:
+                  <span id="status-tick" class="status-ticker">Pending</span>
+                </p>
+              </div>
+            </div>            
           </div>
         </div>
         <div class="row">
@@ -197,7 +206,7 @@
         </div>
       </div>
     </div>
-  <!--row-->
+    <!--row-->
   </div>
   <!--container-->
 

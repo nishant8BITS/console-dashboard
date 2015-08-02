@@ -3,13 +3,13 @@ var checkOutFirebaseReference = new Firebase('https://mcd-checkin-dev.firebaseio
 
 //Get all the users and put them in array
 var usersRef = checkOutFirebaseReference.child("users");
+var userDict = {};
 
 //Get all the orders and put them in an array
 var orderRef = checkOutFirebaseReference.child("order");
+var orderDict = {};
 
-/**
- * populate the users dropdown from FB
- */
+// Populate the users dropdown from FB
 loadUsersFromFB();
 
 // SET VALUES TO GUI
@@ -33,13 +33,48 @@ var iphoneImg = ["/img/assets/1.png", "/img/assets/2.png", "/img/assets/3.png",
   "/img/assets/9.png", "/img/assets/10.png", "/img/assets/11.png", "/img/assets/12.png", "/img/assets/13.png",
   "/img/assets/14.png", "/img/assets/15.png", "/img/assets/16.png", "/img/assets/17.png", "/img/assets/18.png",
   "/img/assets/19.png", "/img/assets/20.png", "/img/assets/21.png", "/img/assets/22.png", "/img/assets/23.png",
-  "/img/assets/24.png", "/img/assets/25.png", "/img/assets/26.png", "/img/assets/27.png", "/img/assets/28.png", "/img/assets/29.png", "/img/assets/30.png"
+  "/img/assets/24.png", "/img/assets/25.png", "/img/assets/26.png", "/img/assets/27.png", "/img/assets/28.png", 
+  "/img/assets/29.png", "/img/assets/30.png"
 ];
 
 // Status ticker states
 var statusTick = ["Waiting", "Assembled", "Delivered"];
 
+var listeningUserChanges = false;
+
+
+function loadUsersFromFB() {
+  usersRef.once("value", function(snapshot) {
+  console.log('loaduserFromFB');
+    // populate select once needs a private var
+    var userDict = snapshot.val();
+    for (var key in userDict) {
+      if (userDict.hasOwnProperty(key)) {
+        var currentUser = userDict[key];
+        $('#userDropdown').append('<option value="' + key + '">' + currentUser.user.name + '</option>');
+          loadUsersInformationFromFB(currentUser, userDict);
+
+      }
+    }
+  })
+
+};
+
+
+function loadUsersInformationFromFB() {
+  usersRef.on("value", function(snapshot) {
+  console.log('loaduserinfoFromFB');
+
+    for (var key in userDict) {
+      if (userDict.hasOwnProperty(key)) {
+        var currentUser = userDict[key];
+      }
+    }
+  })
+};
+
 $("#load-usr").on('click', function() {
+  console.log('init');
   google.maps.event.addDomListener(window, 'load', checkMap);
   $('#selected-usr-panel').removeClass("hidden");
   $('#rgt-col').removeClass("hidden");
@@ -48,111 +83,90 @@ $("#load-usr").on('click', function() {
   var usrSelVal = $('#userDropdown').val();
   var schemaSelVal = $('#schemaDropdown').val();
 
-  usersRef.child(usrSelVal).once('value', function(data) {
-      loadCurrentUser(data.val());
-      //
-      //
-      //if(!listeningUserChanges){
-      //  usersRef.child(usrSelVal).on("value", function(snapshot) {
-      //    loadCurrentUser(snapshot.val())
-      //  });
-      //  listeningUserChanges = true;
-      //}
-  });
-
-  
+  usersRef.child(usrSelVal).on('value', function(data) {
+    loadCurrentUser(data.val());
+  })
 
   switch (schemaSelVal) {
     case "schema-a":
       document.getElementById("bleDropdown").disabled = true;
       document.getElementById("wifiDropdown").disabled = false;
+      console.log('schema-a');
       break;
     case "schema-b":
       document.getElementById("bleDropdown").disabled = false;
       document.getElementById("wifiDropdown").disabled = true;
       break;
     default:
-      alert("User hasn't been selected");
+      alert("A Schema hasn't been selected");
   }
 });
 
-function loadUsersFromFB() {
-  usersRef.on("value", function(snapshot) {
-    // populate select once needs a private var
-    var userDict = snapshot.val();
-
-    for (var key in userDict) {
-
-      if (userDict.hasOwnProperty(key)) {
-        var currentUser = userDict[key];
-        $('#userDropdown').append('<option value="' + key + '">' + currentUser.user.name + '</option>');
-      }
-    }
-  })
-};
 
 
 function loadCurrentUser(currentUser) {
-    console.log('changed value of user', currentUser)
-    var beaconsEnabledReturn = currentUser.beaconsEnabled;
-    var currentViewReturn = currentUser.currentView;
-    var tableServiceEnabledReturn = currentUser.tableServiceEnabled;
-    var wifiOverideReturn = currentUser.wifiOverride;
-    var displayNameReturn = currentUser.user.displayName;
-    var geoFenceEventMethodReturn = currentUser.geoFenceEventMethod;
-    var currentLocation = currentUser.currentLocation || {};
-    var currentLocationLatReturn = currentLocation.latitude;
-    var currentLocationLongReturn = currentLocation.longitude;
+  console.log('changed value of user', currentUser)
+  var beaconsEnabledReturn = currentUser.beaconsEnabled;
+  var currentViewReturn = currentUser.currentView;
+  var tableServiceEnabledReturn = currentUser.tableServiceEnabled;
+  var wifiOverideReturn = currentUser.wifiOverride;
+  var displayNameReturn = currentUser.user.displayName;
+  var geoFenceEventMethodReturn = currentUser.geoFenceEventMethod;
+  var currentLocation = currentUser.currentLocation || {};
+  var currentLocationLatReturn = currentLocation.latitude;
+  var currentLocationLongReturn = currentLocation.longitude;
 
+  console.log("HIT " + displayNameReturn);
+  console.log(currentLocationLatReturn);
+  console.log(currentLocationLongReturn);
 
-    console.log("HIT " + displayNameReturn);
-    console.log(currentLocationLatReturn);
-    console.log(currentLocationLongReturn);
+  checkView(currentViewReturn, displayNameReturn, currentUser);
+  checkTable(tableServiceEnabledReturn);
+  checkWifi(wifiOverideReturn);
+  checkDisplayName(displayNameReturn);
+  checkGeofenceEvent(geoFenceEventMethodReturn);
 
-    checkView(currentViewReturn, displayNameReturn, currentUser);
-    checkTable(tableServiceEnabledReturn);
-    checkWifi(wifiOverideReturn);
-    checkDisplayName(displayNameReturn);
-    checkGeofenceEvent(geoFenceEventMethodReturn);
-    
-    if(parseInt(currentViewReturn) == 8) loadOrders(displayNameReturn, currentUser);
-
+  if (parseInt(currentViewReturn) == 8) loadOrders(displayNameReturn, currentUser);
+  checkMap(currentLocationLatReturn, currentLocationLongReturn)
 }
 
 function loadOrders(displayNameReturn, currentUser) {
-  orderRef.limitToLast(1).once("value", function(snapshot) {
+  console.log('bar');
+  orderRef.limitToLast(1).on("value", function(snapshot) {
     var orderDict = snapshot.val();
-    order = orderDict[Object.keys(orderDict)[0]];
-    // var usersOrder = orderDict[Object.keys(orderDict)[10]];
-    // var timeOfOrder = orderDict[Object.keys(orderDict)[5]];
+    console.log(orderDict);
+    for (var key in orderDict) {
+      if (orderDict.hasOwnProperty(key)) {
+        var order = order[key];
+        console.log("0000")
+        if (displayNameReturn == currentUser.user.displayName.toString()) {
 
-    // if (usersOrder === displayNameReturn) {
-      console.log("////////////////////////////////////////////////////////////////////////////////////HIT");
-      // console.log(snapshot.key());
-      // console.log(snapshot.val());
+          console.log(order);
+          var orderStatusReturn = order.status.orderStatus;
+          var fineBoundaryReturn = order.status.fineBoundary;
+          var orderNumberReturn = order.orderNumber;
 
-      // var currentUsersOrder = snapshot.val();
-      var orderStatusReturn = order.status.orderStatusReturn;
-      var fineBoundaryReturn = order.status.fineBoundary;
-      var orderNumberReturn = order.orderNumber;
-      var orderCodeReturn = order.orderCode;
-      var eta = order.status.eta;
-      var created = order.orderCreationTime;
-      // var latitudeReturn = order.status.currentLocation.latitude;
-      // var longitudeReturn = order.status.currentLocation.longitude;
+          var orderCodeReturn = order.orderCode;
+          var eta = order.status.eta;
+          var created = order.orderCreationTime;
 
-      // console.log("////////////// LONGITUDE  " + longitudeReturn);
-      // console.log("////////////// LATITUDE  " + latitudeReturn);
-      console.log("////////////// ORDER NUMBER  " + orderNumberReturn);
-      console.log("////////////// ORDER STATUS  " + orderStatusReturn);
-      console.log("////////////// FINE BOUNDARY  " + fineBoundaryReturn);
+          console.log('1111');
+          checkFineBoundary(fineBoundaryReturn);
+          console.log('22222211');
 
-      console.log("//////////////ORDERDICT " + orderDict);
-      console.log("//////////////CURRENTORDER ", order);
-      console.log("//////////////CURRENTORDER ETA " + eta);
-      console.log("//////////////CURRENTORDER CREATED " + created);
+          console.log("////////////// ORDER STATUS  " + orderStatusReturn);
+          console.log("////////////// FINE BOUNDARY  " + fineBoundaryReturn);
+          console.log("////////////// ORDER NUMBER  " + orderNumberReturn);
 
-    // }
+          console.log("//////////////CURRENTORDER ", order);
+          console.log("//////////////CURRENTORDER ETA " + eta);
+          console.log("//////////////CURRENTORDER CREATED " + created);
+
+        } else {
+          console.log("9999")
+        }
+      }
+    }
 
   });
 }
@@ -208,7 +222,7 @@ function loadOrders(displayNameReturn, currentUser) {
 //   changeListener();
 // });
 //
-$('input').change(function(e){
+$('input').change(function(e) {
   var userId = $('#userDropdown').val();
   var displayNameVal = $('#displayNameInput').val();
   var tableServiceVal = $('#tableServiceDropdown').val();
@@ -221,15 +235,15 @@ $('input').change(function(e){
   var locationServicesVal = $('#locationServicesDropdown').val();
   var pickUpTableVal = $('#pickUpTableDropdown').val();
 
-
   usersRef.child(userId).update({
-      "displayName": displayNameVal
+    "displayName": displayNameVal
   });
 
 })
 
-function checkMap(longitudeReturn, latitudeReturn) {
-  var myLatlng = new google.maps.LatLng(longitudeReturn, latitudeReturn);
+function checkMap(currentLocationLatReturn, currentLocationLongReturn) {
+  console.log("foo");
+  var myLatlng = new google.maps.LatLng(currentLocationLatReturn, currentLocationLongReturn);
   var mapOptions = {
     zoom: 20,
     center: myLatlng
@@ -242,7 +256,7 @@ function checkMap(longitudeReturn, latitudeReturn) {
 }
 
 function checkGeofenceEvent(geoFenceEventMethodReturn) {
-  switch (geoFenceEventMethodReturn) {
+  switch (parseInt(geoFenceEventMethodReturn)) {
     case 0 && "0":
       $("#geoFenceDropdown").val("ios");
       break;
@@ -287,15 +301,19 @@ function checkDisplayName(displayNameReturn) {
   $('input#displayNameInput').val(displayNameReturn);
 }
 
+
 function checkFineBoundary(fineBoundaryReturn) {
   switch (fineBoundaryReturn) {
     case true:
+      console.log("i am in bool true")
       $("#boundaryDropdown").val("true");
       break;
     case false:
+      console.log("i am in bool false")
       $("#boundaryDropdown").val("false");
       break;
     default:
+      console.log("i am in default")
       $("#boundaryDropdown").val(fineBoundaryVal);
   }
 }
@@ -356,6 +374,7 @@ function checkView(currentViewReturn, displayNameReturn, currentUser) {
       $('#iphone-scrn').css("background-image", "url(" + iphoneImg[7] + ")");
       $('#led').css("background-color", "#ff5021");
       $('#status-tick').html(statusTick[0]);
+      console.log("I SHOULD BE HERE");
       loadOrders(displayNameReturn, currentUser);
       break;
     case 8:
@@ -373,7 +392,7 @@ function checkView(currentViewReturn, displayNameReturn, currentUser) {
       $('#led').css("background-color", "#ffc400");
       $('#status-tick').html(statusTick[1]);
       break;
-    case 11 && "11":
+    case 11:
       $('#iphone-scrn').css("background-image", "url(" + iphoneImg[11] + ")");
       $('#led').css("background-color", "#ffc400");
       $('#status-tick').html(statusTick[1]);
