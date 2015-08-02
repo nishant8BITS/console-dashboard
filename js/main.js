@@ -2,30 +2,30 @@
 var checkOutFirebaseReference = new Firebase('https://mcd-checkin-dev.firebaseio.com/');
 
 //Get all the users and put them in array
-var usersRef = checkOutFirebaseReference.child("users");
-var userDict = {};
+var usersRef = checkOutFirebaseReference.child("users"),
+    userDict = {};
 
 //Get all the orders and put them in an array
-var orderRef = checkOutFirebaseReference.child("order");
-var orderDict = {};
+var orderRef = checkOutFirebaseReference.child("order"),
+    orderDict = {};
 
 // Populate the users dropdown from FB
 loadUsersFromFB();
 
 // SET VALUES TO GUI
-var displayNameVal = $('#displayNameInput').val();
-var tableServiceEnabledVal = $('#tableServiceDropdown').find(':selected').val();
-var fineBoundaryVal = $('#boundaryDropdown').find(':selected').val();
-var wifiVal = $('#wifiDropdown').find(':selected').val();
-var bleVal = $('#bleDropdown').find(':selected').val();
-var currentViewVal = $('#iphone-scrn').find(':selected').val();
-var foodOrderVal = $('#orderDropdown').find(':selected').val();
-var nameVal = "User";
-var emailVal = "user@email.com";
-var beaconsEnabled = true;
-var driveThruVal = $('#driveThruDropdown').find(':selected').val();
-var locationServicesVal = $('#locationServicesDropdown').find(':selected').val();
-var pickUpTableVal = $('#pickUpTableDropdown').find(':selected').val();
+var displayNameVal = $('#displayNameInput').val(),
+    tableServiceEnabledVal = $('#tableServiceDropdown').find(':selected').val(),
+    fineBoundaryVal = $('#boundaryDropdown').find(':selected').val(),
+    wifiVal = $('#wifiDropdown').find(':selected').val(),
+    bleVal = $('#bleDropdown').find(':selected').val(),
+    currentViewVal = $('#iphone-scrn').find(':selected').val(),
+    foodOrderVal = $('#orderDropdown').find(':selected').val(),
+    nameVal = "User",
+    emailVal = "user@email.com",
+    beaconsEnabled = true,
+    driveThruVal = $('#driveThruDropdown').find(':selected').val(),
+    locationServicesVal = $('#locationServicesDropdown').find(':selected').val(),
+    pickUpTableVal = $('#pickUpTableDropdown').find(':selected').val();
 
 // iPhone states
 var iphoneImg = ["/img/assets/1.png", "/img/assets/2.png", "/img/assets/3.png",
@@ -47,41 +47,49 @@ function loadUsersFromFB() {
   usersRef.once("value", function(snapshot) {
   console.log('loaduserFromFB');
     // populate select once needs a private var
-    var userDict = snapshot.val();
+    var userDict = snapshot.val(),
+        currentUser,
+        objUserDropdown = $('#userDropdown'), // Cached the Dropdown Object for Performance optimization
+        objUserDpDn = "";
     for (var key in userDict) {
       if (userDict.hasOwnProperty(key)) {
-        var currentUser = userDict[key];
-        $('#userDropdown').append('<option value="' + key + '">' + currentUser.user.name + '</option>');
-          loadUsersInformationFromFB(currentUser, userDict);
-
+        currentUser = userDict[key];
+        objUserDpDn += '<option value="' + key + '">' + currentUser.user.name + '</option>';
+        loadUsersInformationFromFB(currentUser, userDict);
       }
     }
-  })
-
+    /*
+     After building the Option List Append It in one shot 
+     */
+    objUserDropdown.append(objUserDpDn);
+  });
 };
 
 
 function loadUsersInformationFromFB() {
   usersRef.on("value", function(snapshot) {
   console.log('loaduserinfoFromFB');
-
+    var currentUser;
     for (var key in userDict) {
       if (userDict.hasOwnProperty(key)) {
-        var currentUser = userDict[key];
+        /*
+          Never Declare variable in loop because everytime new variable is created
+          So It's hit performance
+         */ 
+        currentUser = userDict[key]; 
       }
     }
   })
 };
 
-$("#load-usr").on('click', function() {
+$("#load-usr").on('click', function(event) {
   console.log('init');
   google.maps.event.addDomListener(window, 'load', checkMap);
-  $('#selected-usr-panel').removeClass("hidden");
-  $('#rgt-col').removeClass("hidden");
-  $('#far-rgt-col').removeClass("hidden");
+  //Save some line (As JS is executed and sent to client side so make it Less line code If possible)
+  $('#selected-usr-panel,#rgt-col,#far-rgt-col').removeClass("hidden");
 
-  var usrSelVal = $('#userDropdown').val();
-  var schemaSelVal = $('#schemaDropdown').val();
+  var usrSelVal = $('#userDropdown').val(),
+      schemaSelVal = $('#schemaDropdown').val();
 
   usersRef.child(usrSelVal).on('value', function(data) {
     loadCurrentUser(data.val());
@@ -89,13 +97,15 @@ $("#load-usr").on('click', function() {
 
   switch (schemaSelVal) {
     case "schema-a":
-      document.getElementById("bleDropdown").disabled = true;
-      document.getElementById("wifiDropdown").disabled = false;
+      // Make code consistent If Jquery Being used, Used everywhere unless It's need of using 
+      // Plain JavaScript
+      $('#bleDropdown').prop("disabled", true);
+      $('#wifiDropdown').prop("disabled", false);
       console.log('schema-a');
       break;
     case "schema-b":
-      document.getElementById("bleDropdown").disabled = false;
-      document.getElementById("wifiDropdown").disabled = true;
+      $('#bleDropdown').prop("disabled", false);
+      $('#wifiDropdown').prop("disabled", true);
       break;
     default:
       alert("A Schema hasn't been selected");
@@ -106,15 +116,15 @@ $("#load-usr").on('click', function() {
 
 function loadCurrentUser(currentUser) {
   console.log('changed value of user', currentUser)
-  var beaconsEnabledReturn = currentUser.beaconsEnabled;
-  var currentViewReturn = currentUser.currentView;
-  var tableServiceEnabledReturn = currentUser.tableServiceEnabled;
-  var wifiOverideReturn = currentUser.wifiOverride;
-  var displayNameReturn = currentUser.user.displayName;
-  var geoFenceEventMethodReturn = currentUser.geoFenceEventMethod;
-  var currentLocation = currentUser.currentLocation || {};
-  var currentLocationLatReturn = currentLocation.latitude;
-  var currentLocationLongReturn = currentLocation.longitude;
+  var beaconsEnabledReturn = currentUser.beaconsEnabled,
+      currentViewReturn = currentUser.currentView,
+      tableServiceEnabledReturn = currentUser.tableServiceEnabled,
+      wifiOverideReturn = currentUser.wifiOverride,
+      displayNameReturn = currentUser.user.displayName,
+      geoFenceEventMethodReturn = currentUser.geoFenceEventMethod,
+      currentLocation = currentUser.currentLocation || {},
+      currentLocationLatReturn = currentLocation.latitude,
+      currentLocationLongReturn = currentLocation.longitude;
 
   console.log("HIT " + displayNameReturn);
   console.log(currentLocationLatReturn);
@@ -133,22 +143,30 @@ function loadCurrentUser(currentUser) {
 function loadOrders(displayNameReturn, currentUser) {
   console.log('bar');
   orderRef.limitToLast(1).on("value", function(snapshot) {
-    var orderDict = snapshot.val();
+    var orderDict = snapshot.val(),
+        order,
+        orderStatusReturn, 
+        fineBoundaryReturn,
+        orderNumberReturn,
+        orderCodeReturn,
+        eta,
+        created;
     console.log(orderDict);
+
     for (var key in orderDict) {
       if (orderDict.hasOwnProperty(key)) {
-        var order = order[key];
+        order = order[key];
         console.log("0000")
         if (displayNameReturn == currentUser.user.displayName.toString()) {
 
           console.log(order);
-          var orderStatusReturn = order.status.orderStatus;
-          var fineBoundaryReturn = order.status.fineBoundary;
-          var orderNumberReturn = order.orderNumber;
+          orderStatusReturn = order.status.orderStatus;
+          fineBoundaryReturn = order.status.fineBoundary;
+          orderNumberReturn = order.orderNumber;
 
-          var orderCodeReturn = order.orderCode;
-          var eta = order.status.eta;
-          var created = order.orderCreationTime;
+          orderCodeReturn = order.orderCode;
+          eta = order.status.eta;
+          created = order.orderCreationTime;
 
           console.log('1111');
           checkFineBoundary(fineBoundaryReturn);
@@ -223,17 +241,17 @@ function loadOrders(displayNameReturn, currentUser) {
 // });
 //
 $('input').change(function(e) {
-  var userId = $('#userDropdown').val();
-  var displayNameVal = $('#displayNameInput').val();
-  var tableServiceVal = $('#tableServiceDropdown').val();
-  var fineBoundaryVal = $('#boundaryDropdown').val();
-  var wifiVal = $('#wifiDropdown').val();
-  var bleVal = $('#bleDropdown').val();
-  var currentViewVal = $('#iphone-scrn').val();
-  var foodOrderVal = $('#orderDropdown').val();
-  var driveThruVal = $('#driveThruDropdown').val();
-  var locationServicesVal = $('#locationServicesDropdown').val();
-  var pickUpTableVal = $('#pickUpTableDropdown').val();
+  var userId = $('#userDropdown').val(),
+      displayNameVal = $('#displayNameInput').val(),
+      tableServiceVal = $('#tableServiceDropdown').val(),
+      fineBoundaryVal = $('#boundaryDropdown').val(),
+      wifiVal = $('#wifiDropdown').val(),
+      bleVal = $('#bleDropdown').val(),
+      currentViewVal = $('#iphone-scrn').val(),
+      foodOrderVal = $('#orderDropdown').val(),
+      driveThruVal = $('#driveThruDropdown').val(),
+      locationServicesVal = $('#locationServicesDropdown').val(),
+      pickUpTableVal = $('#pickUpTableDropdown').val();
 
   usersRef.child(userId).update({
     "displayName": displayNameVal
@@ -243,12 +261,12 @@ $('input').change(function(e) {
 
 function checkMap(currentLocationLatReturn, currentLocationLongReturn) {
   console.log("foo");
-  var myLatlng = new google.maps.LatLng(currentLocationLatReturn, currentLocationLongReturn);
-  var mapOptions = {
-    zoom: 20,
-    center: myLatlng
-  }
-  var map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+  var myLatlng = new google.maps.LatLng(currentLocationLatReturn, currentLocationLongReturn),
+      mapOptions = {
+         zoom: 20,
+         center: myLatlng
+      },
+     map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
   var marker = new google.maps.Marker({
     position: myLatlng,
     map: map
